@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HireTrack App</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#F5F6FA;--white:#fff;--ink:#0A0C14;--ink2:#3C4259;--ink3:#7B839A;--ink4:#B8BDD1;
+  --border:#E3E6F0;--border2:#C8CCDC;
+  --blue:#2563EB;--blue2:#1D4ED8;--blue-dim:rgba(37,99,235,0.09);
+  --green:#059669;--green-dim:rgba(5,150,105,0.1);
+  --purple:#7C3AED;--purple-dim:rgba(124,58,237,0.09);
+  --amber:#D97706;--amber-dim:rgba(217,119,6,0.1);
+  --rose:#DC2626;--rose-dim:rgba(220,38,38,0.08);
+  --sidebar:#0A0C14;
+}
+html,body{height:100%;font-family:'Inter',sans-serif;font-size:14px;line-height:1.5;color:var(--ink);background:var(--bg);}
+body{display:flex;overflow-x:hidden;}
+
+/* ONBOARDING OVERLAY */
+.onboard-overlay{position:fixed;inset:0;background:rgba(10,12,20,0.85);backdrop-filter:blur(6px);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;}
+.onboard-box{background:var(--white);border-radius:18px;width:480px;max-width:100%;padding:36px;box-shadow:0 24px 80px rgba(0,0,0,.25);text-align:center;}
+.onboard-logo{font-family:'Outfit',sans-serif;font-size:26px;font-weight:900;color:var(--ink);margin-bottom:6px;}
+.onboard-logo span{color:var(--blue);}
+.onboard-step{display:none;}
+.onboard-step.active{display:block;}
+.onboard-icon{font-size:44px;margin-bottom:14px;}
+.onboard-title{font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;margin-bottom:8px;letter-spacing:-.5px;}
+.onboard-sub{font-size:14px;color:var(--ink2);line-height:1.65;margin-bottom:22px;}
+.onboard-dots{display:flex;justify-content:center;gap:7px;margin-top:20px;}
+.onboard-dot{width:7px;height:7px;border-radius:50%;background:var(--border);}
+.onboard-dot.active{background:var(--blue);}
+
+/* SIDEBAR */
+.sidebar{width:228px;background:var(--sidebar);min-height:100vh;position:fixed;top:0;left:0;bottom:0;z-index:100;display:flex;flex-direction:column;}
+.sb-logo{padding:19px 17px 15px;border-bottom:1px solid rgba(255,255,255,.07);}
+.sb-logo-text{font-family:'Outfit',sans-serif;font-size:19px;font-weight:800;color:#fff;letter-spacing:-.4px;}
+.sb-logo-text span{color:var(--blue);}
+.sb-logo-sub{font-size:11px;color:rgba(255,255,255,.25);margin-top:2px;}
+.sb-section{padding:13px 9px 2px;}
+.sb-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.2);padding:0 8px;margin-bottom:3px;}
+.sb-item{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:7px;color:rgba(255,255,255,.42);cursor:pointer;font-size:13px;font-weight:500;transition:all .12s;}
+.sb-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.8);}
+.sb-item.active{background:var(--blue);color:#fff;}
+.sb-icon{font-size:14px;width:16px;text-align:center;flex-shrink:0;}
+.sb-cnt{margin-left:auto;background:rgba(255,255,255,.12);color:rgba(255,255,255,.5);font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;}
+.sb-item.active .sb-cnt{background:rgba(255,255,255,.25);color:#fff;}
+.sb-bottom{margin-top:auto;padding:11px 9px;border-top:1px solid rgba(255,255,255,.07);}
+.sb-profile{display:flex;align-items:center;gap:9px;padding:8px 9px;border-radius:7px;cursor:pointer;transition:background .12s;}
+.sb-profile:hover{background:rgba(255,255,255,.07);}
+.sb-av{width:31px;height:31px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;flex-shrink:0;}
+.sb-nm{font-size:13px;font-weight:600;color:rgba(255,255,255,.78);}
+.sb-rl{font-size:11px;color:rgba(255,255,255,.28);}
+
+/* MAIN */
+.main{margin-left:228px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{height:53px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 21px;gap:11px;position:sticky;top:0;z-index:50;}
+.topbar-title{font-size:15px;font-weight:700;flex:1;}
+.search-box{display:flex;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:5px 10px;gap:6px;width:190px;}
+.search-box input{background:none;border:none;outline:none;font-family:inherit;font-size:13px;color:var(--ink);width:100%;}
+.search-box input::placeholder{color:var(--ink3);}
+.content{padding:21px;flex:1;}
+.view{display:none;}.view.active{display:block;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:7px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;transition:all .13s;white-space:nowrap;}
+.btn-primary{background:var(--blue);color:#fff;}.btn-primary:hover{background:var(--blue2);}
+.btn-ghost{background:transparent;color:var(--ink2);border:1px solid var(--border);}.btn-ghost:hover{background:var(--bg);border-color:var(--border2);}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.btn-danger{background:var(--rose-dim);color:var(--rose);border:1px solid rgba(220,38,38,.15);}
+
+/* CARDS */
+.card{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.card-header{padding:14px 17px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:14px;font-weight:700;}
+.card-sub{font-size:11px;color:var(--ink3);margin-top:1px;}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-bottom:18px;}
+.sbox{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:15px 17px;}
+.sbox-label{font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;}
+.sbox-val{font-family:'Outfit',sans-serif;font-size:25px;font-weight:800;letter-spacing:-1px;line-height:1;}
+.sbox-sub{font-size:11px;color:var(--ink3);margin-top:3px;}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 7px;border-radius:4px;font-size:11px;font-weight:600;}
+.badge-saved{background:var(--amber-dim);color:var(--amber);}
+.badge-applied{background:var(--blue-dim);color:var(--blue);}
+.badge-interview{background:var(--purple-dim);color:var(--purple);}
+.badge-offer{background:var(--green-dim);color:var(--green);}
+.badge-rejected{background:var(--rose-dim);color:var(--rose);}
+.badge-ghosted{background:rgba(123,131,154,.1);color:var(--ink3);}
+.badge-ai{background:var(--blue-dim);color:var(--blue);font-size:10px;}
+
+/* TABLE */
+.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead{background:var(--bg);}
+th{text-align:left;padding:9px 13px;font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:11px 13px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--bg);cursor:pointer;}
+.ra{display:flex;gap:4px;opacity:0;transition:opacity .12s;}
+tr:hover .ra{opacity:1;}
+.ibt{width:26px;height:26px;border-radius:6px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:var(--ink3);transition:all .12s;}
+.ibt:hover{background:var(--blue-dim);color:var(--blue);border-color:rgba(37,99,235,.25);}
+
+/* FORMS */
+.fg{margin-bottom:13px;}
+.fl{font-size:12px;font-weight:600;color:var(--ink2);margin-bottom:4px;display:block;}
+.fi,.fta,.fsel{width:100%;background:var(--white);border:1px solid var(--border);border-radius:7px;padding:8px 10px;color:var(--ink);font-family:inherit;font-size:13px;outline:none;transition:border-color .13s;}
+.fi:focus,.fta:focus,.fsel:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim);}
+.fta{resize:vertical;min-height:80px;line-height:1.6;}
+.fsel option{background:#fff;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+
+/* MODAL */
+.moverlay{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(3px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;}
+.moverlay.open{display:flex;}
+.modal{background:var(--white);border:1px solid var(--border);border-radius:14px;width:540px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 80px rgba(0,0,0,.16);}
+.mhead{padding:17px 21px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white);z-index:1;}
+.mtitle{font-size:15px;font-weight:700;}
+.mclose{background:none;border:none;color:var(--ink3);cursor:pointer;font-size:22px;line-height:1;}
+.mbody{padding:19px 21px;}
+.mfoot{padding:12px 21px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:var(--bg);}
+
+/* TOASTS */
+.toast-wrap{position:fixed;bottom:20px;right:20px;z-index:400;display:flex;flex-direction:column;gap:7px;}
+.toast{background:var(--ink);color:#fff;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,.2);animation:tin .25s ease;min-width:210px;}
+@keyframes tin{from{transform:translateY(10px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.toast.success{border-left:3px solid var(--green);}
+.toast.error{border-left:3px solid var(--rose);}
+.toast.info{border-left:3px solid var(--blue);}
+
+/* EMPTY */
+.empty{text-align:center;padding:46px 20px;}
+.ei{font-size:36px;margin-bottom:10px;}
+.et{font-size:15px;font-weight:700;margin-bottom:5px;}
+.es{font-size:13px;color:var(--ink3);margin-bottom:13px;}
+
+/* DIVIDER */
+.div{height:1px;background:var(--border);margin:15px 0;}
+
+/* SHIMMER */
+.shim{background:linear-gradient(90deg,var(--bg) 25%,#eceef5 50%,var(--bg) 75%);background-size:200% 100%;animation:shim 1.4s infinite;border-radius:6px;}
+@keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* KANBAN */
+.kanban{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;align-items:start;}
+.kcol{background:var(--bg);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.kcol-head{padding:10px 12px;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.kcol-cnt{background:var(--border);color:var(--ink3);font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;}
+.kcol-body{padding:8px;display:flex;flex-direction:column;gap:6px;min-height:50px;}
+.kcard{background:var(--white);border:1px solid var(--border);border-radius:7px;padding:10px;cursor:pointer;transition:all .12s;}
+.kcard:hover{border-color:var(--blue);box-shadow:0 2px 10px rgba(37,99,235,.1);}
+.kc-co{font-size:11px;color:var(--ink3);font-weight:500;margin-bottom:2px;}
+.kc-role{font-weight:700;font-size:13px;line-height:1.3;margin-bottom:5px;}
+
+/* AI */
+.ai-box{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:13px;line-height:1.7;color:var(--ink2);white-space:pre-wrap;max-height:360px;overflow-y:auto;}
+.ai-box:focus{outline:none;border-color:var(--blue);}
+
+/* SCORE RING */
+.ring-wrap{display:flex;align-items:center;gap:16px;padding:16px;}
+.ring{position:relative;width:84px;height:84px;flex-shrink:0;}
+.ring svg{transform:rotate(-90deg);}
+.ring-val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;}
+.kw-chips{display:flex;flex-wrap:wrap;gap:5px;margin:7px 0;}
+.kwc{padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;}
+.kwc-hit{background:var(--green-dim);color:var(--green);}
+.kwc-miss{background:var(--rose-dim);color:var(--rose);}
+
+/* PROGRESS */
+.pbar-w{background:var(--bg);border-radius:4px;height:5px;overflow:hidden;margin-top:4px;}
+.pbar{height:100%;border-radius:4px;transition:width .7s ease;}
+
+/* BULLET */
+.rbullet{display:flex;align-items:flex-start;gap:8px;padding:9px 11px;border-radius:7px;margin-bottom:5px;background:var(--bg);border:1px solid var(--border);font-size:13px;line-height:1.55;color:var(--ink2);}
+.rbd{width:5px;height:5px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:8px;}
+.rbt{flex:1;outline:none;}
+
+/* CHAT */
+.chat-wrap{display:flex;flex-direction:column;gap:11px;max-height:360px;overflow-y:auto;padding:4px;}
+.chat-msg{max-width:84%;padding:10px 13px;border-radius:10px;font-size:13px;line-height:1.6;}
+.chat-ai{background:var(--blue-dim);border:1px solid rgba(37,99,235,.15);color:var(--ink);align-self:flex-start;border-radius:4px 10px 10px 10px;}
+.chat-user{background:var(--blue);color:#fff;align-self:flex-end;border-radius:10px 4px 10px 10px;}
+.chat-input-row{display:flex;gap:7px;margin-top:11px;}
+.chat-input{flex:1;background:var(--white);border:1px solid var(--border);border-radius:7px;padding:8px 12px;font-family:inherit;font-size:13px;color:var(--ink);outline:none;resize:none;}
+.chat-input:focus{border-color:var(--blue);}
+
+/* CAREER */
+.cp-step{display:flex;align-items:flex-start;gap:13px;padding:13px 0;border-bottom:1px solid var(--border);}
+.cp-step:last-child{border-bottom:none;}
+.cp-num{width:27px;height:27px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:2px;}
+.cp-role{font-size:14px;font-weight:700;margin-bottom:3px;}
+.cp-time{font-size:12px;color:var(--blue);font-weight:600;margin-bottom:4px;}
+.cp-desc{font-size:13px;color:var(--ink2);line-height:1.55;}
+
+/* AUTOFILL */
+.af-field{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:7px;background:var(--bg);border:1px solid var(--border);margin-bottom:6px;}
+.af-lbl{font-size:12px;font-weight:600;color:var(--ink3);width:130px;flex-shrink:0;}
+.af-val{font-size:13px;color:var(--ink);flex:1;}
+.af-copy{cursor:pointer;font-size:11px;color:var(--blue);font-weight:600;flex-shrink:0;}
+.af-copy:hover{text-decoration:underline;}
+
+@media(max-width:1100px){.stats-row{grid-template-columns:repeat(3,1fr);}.kanban{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+
+<!-- ONBOARDING -->
+<div class="onboard-overlay" id="onboard-overlay">
+  <div class="onboard-box">
+    <div class="onboard-logo">Hire<span>Track</span></div>
+
+    <div class="onboard-step active" id="ob-1">
+      <div class="onboard-icon">👋</div>
+      <div class="onboard-title">Welcome to HireTrack</div>
+      <div class="onboard-sub">Your AI-powered job search co-pilot. Let's get you set up in 60 seconds so you can start landing interviews.</div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:11px;" onclick="obNext(2)">Get started →</button>
+    </div>
+
+    <div class="onboard-step" id="ob-2">
+      <div class="onboard-icon">🎯</div>
+      <div class="onboard-title">What's your name?</div>
+      <div class="onboard-sub">We'll personalize your dashboard and AI recommendations.</div>
+      <div class="fg" style="text-align:left;"><label class="fl">Your full name</label><input class="fi" id="ob-name" placeholder="Jane Doe" style="margin-bottom:10px;"></div>
+      <div class="fg" style="text-align:left;"><label class="fl">Target role / job title</label><input class="fi" id="ob-role" placeholder="e.g. Senior Product Manager"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:11px;margin-top:6px;" onclick="obNext(3)">Continue →</button>
+    </div>
+
+    <div class="onboard-step" id="ob-3">
+      <div class="onboard-icon">📄</div>
+      <div class="onboard-title">Paste your resume bullets</div>
+      <div class="onboard-sub">The AI uses these to tailor your resume for each job. You can update them anytime in "My Resume".</div>
+      <textarea class="fta" id="ob-bullets" style="min-height:120px;text-align:left;" placeholder="• Led cross-functional team of 8 to ship payments v2, reducing checkout drop-off by 31%&#10;• Increased DAU by 18% through A/B tested onboarding redesign&#10;(skip for now if you prefer)"></textarea>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:11px;margin-top:10px;" onclick="obNext(4)">Continue →</button>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:7px;" onclick="obNext(4)">Skip for now</button>
+    </div>
+
+    <div class="onboard-step" id="ob-4">
+      <div class="onboard-icon">🚀</div>
+      <div class="onboard-title">You're all set!</div>
+      <div class="onboard-sub">Here's what you can do right now:<br><br>
+        <strong>✨ Tailor Resume</strong> — paste a job description and get AI-optimized bullets<br><br>
+        <strong>📋 Track Applications</strong> — log every job you apply to<br><br>
+        <strong>🎤 Mock Interview</strong> — practice with an AI interviewer<br><br>
+        <strong>🗺️ Career Path</strong> — explore where your career can go
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:11px;margin-top:6px;" onclick="finishOnboard()">Go to my dashboard →</button>
+    </div>
+
+    <div class="onboard-dots" id="ob-dots">
+      <div class="onboard-dot active" id="od-1"></div>
+      <div class="onboard-dot" id="od-2"></div>
+      <div class="onboard-dot" id="od-3"></div>
+      <div class="onboard-dot" id="od-4"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sb-logo"><div class="sb-logo-text">Hire<span>Track</span></div><div class="sb-logo-sub">AI job search</div></div>
+  <div class="sb-section">
+    <div class="sb-label">Overview</div>
+    <div class="sb-item active" data-view="dashboard" onclick="nav(this)"><span class="sb-icon">⚡</span>Dashboard</div>
+  </div>
+  <div class="sb-section">
+    <div class="sb-label">Applications</div>
+    <div class="sb-item" data-view="tracker" onclick="nav(this)"><span class="sb-icon">📋</span>All Applications <span class="sb-cnt" id="nc-t">0</span></div>
+    <div class="sb-item" data-view="kanban" onclick="nav(this)"><span class="sb-icon">🗂</span>Kanban Board</div>
+    <div class="sb-item" data-view="followups" onclick="nav(this)"><span class="sb-icon">🔔</span>Follow-ups <span class="sb-cnt" id="nc-f">0</span></div>
+  </div>
+  <div class="sb-section">
+    <div class="sb-label">AI Tools</div>
+    <div class="sb-item" data-view="tailor" onclick="nav(this)"><span class="sb-icon">✨</span>Tailor Resume</div>
+    <div class="sb-item" data-view="coverletter" onclick="nav(this)"><span class="sb-icon">📝</span>Cover Letter</div>
+    <div class="sb-item" data-view="mockinterview" onclick="nav(this)"><span class="sb-icon">🎤</span>Mock Interview</div>
+    <div class="sb-item" data-view="careerpath" onclick="nav(this)"><span class="sb-icon">🗺️</span>Career Path</div>
+    <div class="sb-item" data-view="jobsearch" onclick="nav(this)"><span class="sb-icon">💬</span>Job Search AI</div>
+  </div>
+  <div class="sb-section">
+    <div class="sb-label">Profile</div>
+    <div class="sb-item" data-view="autofill" onclick="nav(this)"><span class="sb-icon">⚡</span>Auto-fill Profile</div>
+    <div class="sb-item" data-view="resume" onclick="nav(this)"><span class="sb-icon">📄</span>My Resume</div>
+    <div class="sb-item" data-view="settings" onclick="nav(this)"><span class="sb-icon">⚙️</span>Settings</div>
+  </div>
+  <div class="sb-bottom">
+    <div class="sb-profile" onclick="nav(document.querySelector('[data-view=settings]'))">
+      <div class="sb-av" id="sb-av">?</div>
+      <div><div class="sb-nm" id="sb-nm">Your Profile</div><div class="sb-rl" id="sb-rl">Click to edit →</div></div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">Dashboard</div>
+    <div class="search-box"><span style="color:var(--ink3)">🔍</span><input type="text" placeholder="Search applications…" id="srch" oninput="handleSearch(this.value)"></div>
+    <a href="/index.html" class="btn btn-ghost btn-sm">← Home</a>
+    <button class="btn btn-primary btn-sm" onclick="openM('app')">＋ Add Application</button>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div id="view-dashboard" class="view active">
+      <div class="stats-row">
+        <div class="sbox"><div class="sbox-label">Total Applied</div><div class="sbox-val" id="ds-t">0</div><div class="sbox-sub">applications</div></div>
+        <div class="sbox"><div class="sbox-label">Interviews</div><div class="sbox-val" id="ds-i" style="color:var(--purple)">0</div><div class="sbox-sub" id="ds-ir">—</div></div>
+        <div class="sbox"><div class="sbox-label">Offers</div><div class="sbox-val" id="ds-o" style="color:var(--green)">0</div><div class="sbox-sub" id="ds-or">—</div></div>
+        <div class="sbox"><div class="sbox-label">Response Rate</div><div class="sbox-val" id="ds-rr">0%</div><div class="sbox-sub">heard back</div></div>
+        <div class="sbox"><div class="sbox-label">Follow-ups Due</div><div class="sbox-val" id="ds-fu" style="color:var(--amber)">0</div><div class="sbox-sub">this week</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 290px;gap:14px;">
+        <div>
+          <div class="card" style="margin-bottom:13px;">
+            <div class="card-header"><div><div class="card-title">Recent Applications</div></div><button class="btn btn-ghost btn-sm" onclick="nav(document.querySelector('[data-view=tracker]'))">View all →</button></div>
+            <div id="ds-feed"></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Monthly Activity</div></div>
+            <div style="padding:15px;" id="ds-chart"></div>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom:12px;">
+            <div class="card-header"><div class="card-title">Pipeline</div></div>
+            <div style="padding:13px;" id="ds-pipe"></div>
+          </div>
+          <div class="card" style="margin-bottom:12px;">
+            <div class="card-header"><div class="card-title">Quick Actions</div></div>
+            <div style="padding:11px;display:flex;flex-direction:column;gap:6px;">
+              <button class="btn btn-primary" style="justify-content:center;" onclick="openM('app')">＋ Log Application</button>
+              <button class="btn btn-ghost" style="justify-content:center;" onclick="nav(document.querySelector('[data-view=tailor]'))">✨ Tailor Resume</button>
+              <button class="btn btn-ghost" style="justify-content:center;" onclick="nav(document.querySelector('[data-view=mockinterview]'))">🎤 Mock Interview</button>
+              <button class="btn btn-ghost" style="justify-content:center;" onclick="nav(document.querySelector('[data-view=coverletter]'))">📝 Cover Letter</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Follow-ups Due</div></div>
+            <div id="ds-fu-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRACKER -->
+    <div id="view-tracker" class="view">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:13px;flex-wrap:wrap;">
+        <div style="display:flex;gap:5px;" id="tr-filters">
+          <button class="btn btn-sm btn-ghost xf" onclick="setF('all',this)">All</button>
+          <button class="btn btn-sm btn-ghost" onclick="setF('saved',this)">Saved</button>
+          <button class="btn btn-sm btn-ghost" onclick="setF('applied',this)">Applied</button>
+          <button class="btn btn-sm btn-ghost" onclick="setF('interview',this)">Interview</button>
+          <button class="btn btn-sm btn-ghost" onclick="setF('offer',this)">Offer</button>
+          <button class="btn btn-sm btn-ghost" onclick="setF('rejected',this)">Rejected</button>
+          <button class="btn btn-sm btn-ghost" onclick="setF('ghosted',this)">Ghosted</button>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:6px;">
+          <button class="btn btn-ghost btn-sm" onclick="exportCSV()">⬇ CSV</button>
+          <button class="btn btn-primary btn-sm" onclick="openM('app')">＋ Add</button>
+        </div>
+      </div>
+      <div class="card"><div class="tw"><table>
+        <thead><tr><th>Company</th><th>Role</th><th>Status</th><th>Applied</th><th>Salary</th><th>Follow-up</th><th>Score</th><th></th></tr></thead>
+        <tbody id="tr-body"></tbody>
+      </table></div></div>
+    </div>
+
+    <!-- KANBAN -->
+    <div id="view-kanban" class="view"><div class="kanban" id="kanban-board"></div></div>
+
+    <!-- FOLLOW-UPS -->
+    <div id="view-followups" class="view">
+      <div class="card"><div class="card-header"><div class="card-title">Follow-up Reminders</div><div class="card-sub">Applications that need your attention</div></div><div id="fu-body"></div></div>
+    </div>
+
+    <!-- TAILOR -->
+    <div id="view-tailor" class="view">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <div class="card" style="margin-bottom:13px;">
+            <div class="card-header"><div class="card-title">Job Description</div></div>
+            <div style="padding:14px;">
+              <textarea class="fta" id="jd-inp" style="min-height:170px;" placeholder="Paste the full job description here…"></textarea>
+              <div class="frow" style="margin-top:8px;">
+                <input class="fi" id="jd-co" placeholder="Company name">
+                <input class="fi" id="jd-role" placeholder="Role title">
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Your Resume Bullets</div></div>
+            <div style="padding:14px;">
+              <textarea class="fta" id="res-inp" style="min-height:120px;" placeholder="• Led team of 8 to ship payments v2…&#10;• Increased retention by 23%…"></textarea>
+              <button class="btn btn-ghost btn-sm" style="margin-top:7px;" onclick="loadRes()">Load from My Resume</button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card" style="margin-bottom:13px;">
+            <div class="card-header"><div class="card-title">ATS Score</div></div>
+            <div id="ats-panel"><div class="empty" style="padding:22px;"><div class="ei">🎯</div><div class="et">Paste a job description to score</div></div></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">✨ AI-Tailored Bullets</div><span class="badge badge-ai">Claude AI</span></div>
+            <div style="padding:14px;" id="tailor-wrap">
+              <div id="tailor-empty" style="text-align:center;padding:18px;color:var(--ink3);font-size:13px;">Click "Tailor Resume" to generate optimized bullets</div>
+              <div id="tailor-out" style="display:none;"></div>
+            </div>
+            <div style="padding:0 14px 13px;display:none;gap:6px;" id="tailor-acts">
+              <button class="btn btn-primary btn-sm" onclick="copyBullets()">📋 Copy</button>
+              <button class="btn btn-ghost btn-sm" onclick="saveBulletsToApp()">Save to App</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:center;gap:9px;margin-top:13px;">
+        <button class="btn btn-ghost" onclick="runATS()">🎯 Score Resume</button>
+        <button class="btn btn-primary" onclick="tailorResume()">✨ Tailor My Bullets</button>
+      </div>
+    </div>
+
+    <!-- COVER LETTER -->
+    <div id="view-coverletter" class="view">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Job Details</div></div>
+          <div style="padding:16px;">
+            <div class="fg"><label class="fl">Company *</label><input class="fi" id="cl-co" placeholder="e.g. Stripe"></div>
+            <div class="fg"><label class="fl">Role *</label><input class="fi" id="cl-role" placeholder="e.g. Senior PM"></div>
+            <div class="fg"><label class="fl">Job Description</label><textarea class="fta" id="cl-jd" placeholder="Paste the job description…" style="min-height:90px;"></textarea></div>
+            <div class="fg"><label class="fl">Your Key Strengths</label><textarea class="fta" id="cl-str" placeholder="5 years PM experience, shipped 0→1 product…"></textarea></div>
+            <div class="fg"><label class="fl">Tone</label>
+              <select class="fsel" id="cl-tone">
+                <option value="professional">Professional & confident</option>
+                <option value="enthusiastic">Enthusiastic & energetic</option>
+                <option value="concise">Concise & direct</option>
+                <option value="storytelling">Narrative & storytelling</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="genCL()">📝 Generate Cover Letter</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Generated Letter</div><span class="badge badge-ai">Claude AI</span></div>
+          <div style="padding:16px;" id="cl-wrap">
+            <div id="cl-empty" style="text-align:center;padding:26px;color:var(--ink3);font-size:13px;">Fill the form and click Generate</div>
+            <div id="cl-out" style="display:none;">
+              <div class="ai-box" id="cl-text" contenteditable="true"></div>
+              <div style="display:flex;gap:7px;margin-top:10px;"><button class="btn btn-primary btn-sm" onclick="copyCL()">📋 Copy</button><button class="btn btn-ghost btn-sm" onclick="genCL()">↺ Regenerate</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOCK INTERVIEW -->
+    <div id="view-mockinterview" class="view">
+      <div style="display:grid;grid-template-columns:320px 1fr;gap:16px;">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Interview Setup</div></div>
+          <div style="padding:15px;">
+            <div class="fg"><label class="fl">Company / Role</label><input class="fi" id="mi-co" placeholder="e.g. Google — PM"></div>
+            <div class="fg"><label class="fl">Interview Type</label>
+              <select class="fsel" id="mi-type">
+                <option value="behavioral">Behavioral (STAR method)</option>
+                <option value="technical">Technical screening</option>
+                <option value="product">Product sense</option>
+                <option value="case">Case study</option>
+                <option value="culture">Culture fit</option>
+                <option value="final">Final round / executive</option>
+              </select>
+            </div>
+            <div class="fg"><label class="fl">Job Description</label><textarea class="fta" id="mi-jd" placeholder="Paste JD for more relevant questions…" style="min-height:75px;"></textarea></div>
+            <div class="fg"><label class="fl">Your Background</label><textarea class="fta" id="mi-bg" placeholder="Your role, experience, key wins…" style="min-height:65px;"></textarea></div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="startInterview()">🎤 Start Mock Interview</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div><div class="card-title">AI Mock Interview</div><div class="card-sub">Type your answers — get real-time feedback</div></div><span class="badge badge-ai">Claude AI</span></div>
+          <div style="padding:15px;">
+            <div class="chat-wrap" id="mi-chat">
+              <div style="text-align:center;padding:26px;color:var(--ink3);font-size:13px;"><div style="font-size:30px;margin-bottom:9px;">🎤</div>Set up your interview and click Start</div>
+            </div>
+            <div class="chat-input-row" id="mi-row" style="display:none;">
+              <textarea class="chat-input" id="mi-inp" placeholder="Type your answer… (Enter to send, Shift+Enter for new line)" rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAns();}"></textarea>
+              <button class="btn btn-primary" onclick="sendAns()">Send →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAREER PATH -->
+    <div id="view-careerpath" class="view">
+      <div style="display:grid;grid-template-columns:320px 1fr;gap:16px;">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Career Explorer</div></div>
+          <div style="padding:15px;">
+            <div class="fg"><label class="fl">Current Role *</label><input class="fi" id="cp-cur" placeholder="e.g. Marketing Coordinator"></div>
+            <div class="fg"><label class="fl">Years of Experience</label><input class="fi" id="cp-yrs" placeholder="e.g. 3" type="number" min="0"></div>
+            <div class="fg"><label class="fl">Key Skills</label><textarea class="fta" id="cp-skills" placeholder="Python, project management, Figma…" style="min-height:65px;"></textarea></div>
+            <div class="fg"><label class="fl">Goal / Dream Role</label><input class="fi" id="cp-goal" placeholder="e.g. VP of Marketing, or 'not sure'"></div>
+            <div class="fg"><label class="fl">Direction</label>
+              <select class="fsel" id="cp-pref">
+                <option value="fastest">Fastest path to senior</option>
+                <option value="pivot">Career pivot</option>
+                <option value="leadership">Move into leadership</option>
+                <option value="specialist">Deep specialization</option>
+                <option value="startup">Startup / entrepreneurship</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="exploreCareer()">🗺️ Explore My Path</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Your Career Roadmap</div><span class="badge badge-ai">Claude AI</span></div>
+          <div style="padding:15px;" id="cp-result">
+            <div class="empty"><div class="ei">🗺️</div><div class="et">Fill in your details</div><div class="es">We'll map out realistic career paths from where you are now</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOB SEARCH AI -->
+    <div id="view-jobsearch" class="view">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="card">
+          <div class="card-header"><div><div class="card-title">Conversational Job Search</div><div class="card-sub">Describe your ideal job in plain English</div></div></div>
+          <div style="padding:16px;">
+            <div class="fg"><label class="fl">Describe your ideal next role *</label><textarea class="fta" id="js-q" style="min-height:120px;" placeholder="e.g. I want a remote senior PM role at a Series B fintech startup, NYC timezone. I care about equity and work-life balance. I have 5 years experience and love consumer products."></textarea></div>
+            <div class="fg"><label class="fl">Your background (optional)</label><textarea class="fta" id="js-bg" placeholder="Current role, skills, experience level…" style="min-height:65px;"></textarea></div>
+            <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="searchJobs()">💬 Find Matching Roles</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Role Matches & Strategy</div><span class="badge badge-ai">Claude AI</span></div>
+          <div style="padding:15px;" id="js-result">
+            <div class="empty"><div class="ei">💬</div><div class="et">Describe your ideal job</div><div class="es">We'll translate it into specific roles, companies, and search terms</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUTO-FILL -->
+    <div id="view-autofill" class="view">
+      <div style="max-width:680px;">
+        <div class="card" style="margin-bottom:13px;">
+          <div class="card-header"><div><div class="card-title">Auto-fill Profile</div><div class="card-sub">Save once — copy any field instantly into any application form</div></div></div>
+          <div style="padding:16px;">
+            <div class="frow"><div class="fg"><label class="fl">Full Name</label><input class="fi" id="af-name" placeholder="Jane Doe"></div><div class="fg"><label class="fl">Email</label><input class="fi" id="af-email" placeholder="jane@example.com"></div></div>
+            <div class="frow"><div class="fg"><label class="fl">Phone</label><input class="fi" id="af-phone" placeholder="+1 (555) 000-0000"></div><div class="fg"><label class="fl">Location</label><input class="fi" id="af-loc" placeholder="New York, NY (Remote OK)"></div></div>
+            <div class="fg"><label class="fl">LinkedIn URL</label><input class="fi" id="af-li" placeholder="https://linkedin.com/in/…"></div>
+            <div class="fg"><label class="fl">Portfolio / Website</label><input class="fi" id="af-web" placeholder="https://…"></div>
+            <div class="frow"><div class="fg"><label class="fl">Current Title</label><input class="fi" id="af-title" placeholder="Senior Product Manager"></div><div class="fg"><label class="fl">Years of Experience</label><input class="fi" id="af-yoe" placeholder="5" type="number"></div></div>
+            <div class="frow"><div class="fg"><label class="fl">Salary Expectation</label><input class="fi" id="af-sal" placeholder="$130,000–$160,000"></div><div class="fg"><label class="fl">Work Authorization</label><select class="fsel" id="af-auth"><option>US Citizen</option><option>Green Card</option><option>H-1B Visa</option><option>OPT / STEM OPT</option><option>Require sponsorship</option></select></div></div>
+            <div class="fg"><label class="fl">Professional Summary</label><textarea class="fta" id="af-sum" placeholder="2–3 sentences for 'About You' fields…" style="min-height:70px;"></textarea></div>
+            <button class="btn btn-primary" onclick="saveAF()">Save Profile</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Quick Copy — Click any value to copy it</div></div>
+          <div style="padding:14px;" id="af-qc"><div style="font-size:13px;color:var(--ink3);">Save your profile above to see quick-copy fields.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MY RESUME -->
+    <div id="view-resume" class="view">
+      <div style="max-width:680px;">
+        <div class="card">
+          <div class="card-header"><div><div class="card-title">Master Resume</div><div class="card-sub">Your base — AI tailors this for each job</div></div><button class="btn btn-ghost btn-sm" onclick="nav(document.querySelector('[data-view=tailor]'))">✨ Tailor for a Job →</button></div>
+          <div style="padding:16px;">
+            <div class="fg"><label class="fl">Career Summary</label><textarea class="fta" id="r-sum" placeholder="2–3 sentence career summary…" style="min-height:65px;"></textarea></div>
+            <div class="fg"><label class="fl">Key Skills</label><input class="fi" id="r-skills" placeholder="Product Management, SQL, Figma, A/B Testing…"></div>
+            <div class="fg"><label class="fl">Experience Bullets</label><div style="font-size:11px;color:var(--ink3);margin-bottom:6px;">One bullet per line. Numbers and outcomes get interviews.</div><textarea class="fta" id="r-bullets" placeholder="• Led cross-functional team of 8 to ship payments v2, reducing checkout drop-off by 31%&#10;• Increased DAU by 18% through A/B tested onboarding redesign" style="min-height:160px;"></textarea></div>
+            <div class="fg"><label class="fl">Education</label><input class="fi" id="r-edu" placeholder="B.S. Computer Science, MIT, 2019"></div>
+            <button class="btn btn-primary" onclick="saveResume()">Save Resume</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="view-settings" class="view">
+      <div style="max-width:420px;">
+        <div class="card" style="margin-bottom:13px;">
+          <div class="card-header"><div class="card-title">Your Profile</div></div>
+          <div style="padding:16px;">
+            <div class="fg"><label class="fl">Full Name</label><input class="fi" id="s-name" placeholder="Jane Doe"></div>
+            <div class="fg"><label class="fl">Target Role</label><input class="fi" id="s-role" placeholder="e.g. Senior Product Manager"></div>
+            <div class="fg"><label class="fl">Target Industries</label><input class="fi" id="s-ind" placeholder="e.g. Fintech, B2B SaaS"></div>
+            <div class="fg"><label class="fl">Target Salary</label><input class="fi" id="s-sal" placeholder="e.g. $120k–$150k"></div>
+            <button class="btn btn-primary" onclick="saveSettings()">Save</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Data</div></div>
+          <div style="padding:16px;">
+            <p style="font-size:13px;color:var(--ink2);margin-bottom:13px;">All data is saved in your browser locally.</p>
+            <div style="display:flex;gap:7px;flex-wrap:wrap;">
+              <button class="btn btn-ghost" onclick="exportCSV()">⬇ Export CSV</button>
+              <button class="btn btn-ghost" onclick="exportAll()">⬇ Backup JSON</button>
+              <button class="btn btn-danger" onclick="clearAll()">🗑 Clear All</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: ADD/EDIT APP -->
+<div class="moverlay" id="modal-app">
+  <div class="modal">
+    <div class="mhead"><div class="mtitle" id="mapp-t">Add Application</div><button class="mclose" onclick="closeM('app')">×</button></div>
+    <div class="mbody">
+      <input type="hidden" id="eid">
+      <div class="frow"><div class="fg"><label class="fl">Company *</label><input class="fi" id="f-co" placeholder="e.g. Stripe"></div><div class="fg"><label class="fl">Role *</label><input class="fi" id="f-role" placeholder="e.g. Senior PM"></div></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Status</label><select class="fsel" id="f-status"><option value="saved">Saved</option><option value="applied" selected>Applied</option><option value="interview">Interview</option><option value="offer">Offer</option><option value="rejected">Rejected</option><option value="ghosted">Ghosted</option></select></div>
+        <div class="fg"><label class="fl">Date Applied</label><input class="fi" id="f-date" type="date"></div>
+      </div>
+      <div class="frow"><div class="fg"><label class="fl">Salary Range</label><input class="fi" id="f-sal" placeholder="$120k–$150k"></div><div class="fg"><label class="fl">Location</label><input class="fi" id="f-loc" placeholder="Remote, NYC…"></div></div>
+      <div class="fg"><label class="fl">Job URL</label><input class="fi" id="f-url" type="url" placeholder="https://…"></div>
+      <div class="fg"><label class="fl">Follow-up Date</label><input class="fi" id="f-fu" type="date"></div>
+      <div class="fg"><label class="fl">Ghost Listing?</label><select class="fsel" id="f-ghost"><option value="no">No — real posting</option><option value="suspected">Suspected ghost</option><option value="confirmed">Confirmed ghost</option></select></div>
+      <div class="fg"><label class="fl">Notes</label><textarea class="fta" id="f-notes" placeholder="Recruiter name, interview notes…"></textarea></div>
+    </div>
+    <div class="mfoot"><button class="btn btn-ghost" onclick="closeM('app')">Cancel</button><button class="btn btn-primary" onclick="saveApp()">Save Application</button></div>
+  </div>
+</div>
+
+<!-- MODAL: VIEW APP -->
+<div class="moverlay" id="modal-view">
+  <div class="modal" style="width:580px;">
+    <div class="mhead"><div><div class="mtitle" id="va-t">—</div><div style="font-size:12px;color:var(--ink3);margin-top:2px;" id="va-s">—</div></div><button class="mclose" onclick="closeM('view')">×</button></div>
+    <div class="mbody" id="va-body"></div>
+    <div class="mfoot"><button class="btn btn-danger btn-sm" id="va-del">Delete</button><button class="btn btn-ghost" onclick="closeM('view')">Close</button><button class="btn btn-primary" id="va-edit">Edit</button></div>
+  </div>
+</div>
+
+<!-- MODAL: CONFIRM -->
+<div class="moverlay" id="modal-confirm">
+  <div class="modal" style="max-width:350px;">
+    <div class="mhead"><div class="mtitle">Confirm Delete</div><button class="mclose" onclick="closeM('confirm')">×</button></div>
+    <div class="mbody"><p style="font-size:13px;color:var(--ink2);" id="cm-msg">Are you sure?</p></div>
+    <div class="mfoot"><button class="btn btn-ghost" onclick="closeM('confirm')">Cancel</button><button class="btn btn-danger" id="cm-ok">Delete</button></div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+// ── CONFIG ─────────────────────────────────────────────────────────────────
+const API_KEY = 'YOUR_API_KEY_HERE';
+
+// ── DB ─────────────────────────────────────────────────────────────────────
+const KEY='ht_v4';
+let DB={apps:[],settings:{},resume:{},autofill:{},onboarded:false};
+let miHistory=[],miSetup=null;
+
+function load(){try{const r=localStorage.getItem(KEY);if(r)DB={...DB,...JSON.parse(r)};}catch(e){}updateNav();}
+function save(){localStorage.setItem(KEY,JSON.stringify(DB));updateNav();}
+
+// ── ONBOARDING ─────────────────────────────────────────────────────────────
+function obNext(step){
+  document.querySelectorAll('.onboard-step').forEach(s=>s.classList.remove('active'));
+  document.getElementById('ob-'+step).classList.add('active');
+  document.querySelectorAll('.onboard-dot').forEach((d,i)=>d.classList.toggle('active',i===step-1));
+}
+
+function finishOnboard(){
+  const name=document.getElementById('ob-name').value.trim();
+  const role=document.getElementById('ob-role').value.trim();
+  const bullets=document.getElementById('ob-bullets').value.trim();
+  if(name)DB.settings.name=name;
+  if(role)DB.settings.role=role;
+  if(bullets)DB.resume.bullets=bullets;
+  DB.onboarded=true;
+  save();
+  document.getElementById('onboard-overlay').style.display='none';
+  updateNav();
+  renderDash();
+  toast('Welcome to HireTrack! 🎉','success');
+}
+
+// ── UTILS ──────────────────────────────────────────────────────────────────
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function today(){return new Date().toISOString().split('T')[0];}
+function fmtD(d){if(!d)return'—';return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function diff(d){if(!d)return null;return Math.ceil((new Date(d+'T12:00:00')-new Date())/86400000);}
+function compColor(n){const c=['#2563EB','#7C3AED','#059669','#D97706','#DC2626','#0891B2','#9333EA','#EA580C'];let h=0;for(const ch of(n||'?'))h=(h*31+ch.charCodeAt(0))%c.length;return c[Math.abs(h)];}
+function v(id){return document.getElementById(id)?.value?.trim()||'';}
+
+const SL={saved:'Saved',applied:'Applied',interview:'Interview',offer:'Offer ✓',rejected:'Rejected',ghosted:'Ghosted'};
+const SB={saved:'badge-saved',applied:'badge-applied',interview:'badge-interview',offer:'badge-offer',rejected:'badge-rejected',ghosted:'badge-ghosted'};
+const PAGES={dashboard:'Dashboard',tracker:'All Applications',kanban:'Kanban Board',followups:'Follow-ups',tailor:'Tailor Resume',coverletter:'Cover Letter',mockinterview:'Mock Interview',careerpath:'Career Path Explorer',jobsearch:'Job Search AI',autofill:'Auto-fill Profile',resume:'My Resume',settings:'Settings'};
+let curView='dashboard',trFilter='all';
+
+// ── NAV ────────────────────────────────────────────────────────────────────
+function nav(el){
+  const vw=el.dataset.view;
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
+  document.getElementById('view-'+vw).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('page-title').textContent=PAGES[vw]||vw;
+  curView=vw;renderV(vw);
+}
+function renderV(v){
+  if(v==='dashboard')renderDash();
+  if(v==='tracker')renderTracker();
+  if(v==='kanban')renderKanban();
+  if(v==='followups')renderFollowups();
+  if(v==='resume')renderResumePage();
+  if(v==='settings')renderSettings();
+  if(v==='autofill')renderAF();
+}
+function updateNav(){
+  const t=DB.apps.length;
+  const fu=DB.apps.filter(a=>a.followupDate&&diff(a.followupDate)<=3&&diff(a.followupDate)>=0&&!['offer','rejected'].includes(a.status)).length;
+  document.getElementById('nc-t').textContent=t;
+  document.getElementById('nc-f').textContent=fu;
+  const nm=DB.settings.name||'Your Profile';
+  document.getElementById('sb-av').textContent=nm.charAt(0).toUpperCase();
+  document.getElementById('sb-nm').textContent=nm;
+  document.getElementById('sb-rl').textContent=DB.settings.role||'Set target role →';
+}
+
+// ── DASHBOARD ──────────────────────────────────────────────────────────────
+function renderDash(){
+  const A=DB.apps,t=A.length;
+  const ints=A.filter(a=>a.status==='interview').length;
+  const offs=A.filter(a=>a.status==='offer').length;
+  const resp=A.filter(a=>['interview','offer','rejected'].includes(a.status)).length;
+  const rr=t>0?Math.round(resp/t*100):0;
+  const fu=A.filter(a=>a.followupDate&&diff(a.followupDate)<=3&&diff(a.followupDate)>=0&&!['offer','rejected'].includes(a.status)).length;
+  document.getElementById('ds-t').textContent=t;
+  document.getElementById('ds-i').textContent=ints;
+  document.getElementById('ds-ir').textContent=t?Math.round(ints/t*100)+'% rate':'—';
+  document.getElementById('ds-o').textContent=offs;
+  document.getElementById('ds-or').textContent=ints?Math.round(offs/Math.max(ints,1)*100)+'% offer rate':'—';
+  document.getElementById('ds-rr').textContent=rr+'%';
+  document.getElementById('ds-fu').textContent=fu;
+
+  const feed=document.getElementById('ds-feed');
+  const recent=[...A].sort((a,b)=>b.createdAt-a.createdAt).slice(0,5);
+  if(!recent.length){
+    feed.innerHTML=`<div class="empty"><div class="ei">📋</div><div class="et">No applications yet</div><div class="es">Start tracking your job search</div><button class="btn btn-primary btn-sm" onclick="openM('app')">＋ Add First Application</button></div>`;
+  } else {
+    feed.innerHTML=recent.map(a=>`<div onclick="viewApp('${a.id}')" style="display:flex;align-items:center;gap:10px;padding:10px 15px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
+      <div style="width:33px;height:33px;border-radius:7px;background:${compColor(a.company)};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;flex-shrink:0;">${(a.company||'?').charAt(0).toUpperCase()}</div>
+      <div style="flex:1;min-width:0;"><div style="font-weight:700;font-size:13px;">${esc(a.company)}</div><div style="font-size:11px;color:var(--ink3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(a.role)}</div></div>
+      <span class="badge ${SB[a.status]||''}">${SL[a.status]||a.status}</span>
+      <div style="font-size:11px;color:var(--ink3);white-space:nowrap;">${fmtD(a.dateApplied)}</div>
+    </div>`).join('');
+  }
+
+  const pd=[{l:'Saved',c:A.filter(a=>a.status==='saved').length,col:'var(--amber)'},{l:'Applied',c:A.filter(a=>a.status==='applied').length,col:'var(--blue)'},{l:'Interview',c:A.filter(a=>a.status==='interview').length,col:'var(--purple)'},{l:'Offer',c:A.filter(a=>a.status==='offer').length,col:'var(--green)'}];
+  const mx=Math.max(...pd.map(p=>p.c),1);
+  document.getElementById('ds-pipe').innerHTML=pd.map(p=>`<div style="margin-bottom:11px;"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;"><span>${p.l}</span><span style="font-weight:700;">${p.c}</span></div><div class="pbar-w"><div class="pbar" style="width:${Math.round(p.c/mx*100)}%;background:${p.col};"></div></div></div>`).join('');
+
+  const fuApps=A.filter(a=>a.followupDate&&diff(a.followupDate)<=7&&!['offer','rejected','ghosted'].includes(a.status)).sort((a,b)=>new Date(a.followupDate)-new Date(b.followupDate));
+  const ful=document.getElementById('ds-fu-list');
+  if(!fuApps.length){ful.innerHTML='<div style="padding:13px;font-size:13px;color:var(--ink3);">No follow-ups due soon 🎉</div>';}
+  else ful.innerHTML=fuApps.slice(0,4).map(a=>{const d=diff(a.followupDate);const label=d<0?`${Math.abs(d)}d overdue`:d===0?'Today':d===1?'Tomorrow':`In ${d}d`;const col=d<0?'var(--rose)':d===0?'var(--amber)':'var(--ink2)';return`<div onclick="viewApp('${a.id}')" style="display:flex;align-items:center;gap:9px;padding:8px 12px;border-bottom:1px solid var(--border);cursor:pointer;" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''"><div style="width:6px;height:6px;border-radius:50%;background:${col};flex-shrink:0;"></div><div style="flex:1;"><div style="font-size:13px;font-weight:600;">${esc(a.company)}</div><div style="font-size:11px;color:var(--ink3);">${esc(a.role)}</div></div><div style="font-size:11px;font-weight:600;color:${col};">${label}</div></div>`;}).join('');
+
+  const mo={};for(let i=5;i>=0;i--){const d=new Date();d.setMonth(d.getMonth()-i);mo[d.toISOString().slice(0,7)]=0;}
+  A.forEach(a=>{if(a.dateApplied){const k=a.dateApplied.slice(0,7);if(k in mo)mo[k]++;}});
+  const ks=Object.keys(mo).sort(),vs=ks.map(k=>mo[k]),mx2=Math.max(...vs,1);
+  const ch=document.getElementById('ds-chart');
+  if(!A.length){ch.innerHTML='<div style="color:var(--ink3);font-size:13px;">Log applications to see your timeline</div>';return;}
+  ch.innerHTML=`<div style="display:flex;align-items:flex-end;gap:7px;height:65px;">${ks.map((k,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="width:100%;border-radius:3px 3px 0 0;background:var(--blue);height:${Math.max(4,Math.round(vs[i]/mx2*52))}px;" title="${vs[i]} apps"></div><div style="font-size:9px;color:var(--ink3);">${k.slice(5)}</div></div>`).join('')}</div>`;
+}
+
+// ── TRACKER ────────────────────────────────────────────────────────────────
+function setF(f,btn){trFilter=f;document.querySelectorAll('#tr-filters .btn').forEach(b=>b.classList.remove('xf'));btn.classList.add('xf');renderTracker();}
+function renderTracker(q){
+  let apps=[...DB.apps].sort((a,b)=>b.createdAt-a.createdAt);
+  if(trFilter!=='all')apps=apps.filter(a=>a.status===trFilter);
+  if(q)apps=apps.filter(a=>(a.company+a.role).toLowerCase().includes(q.toLowerCase()));
+  const body=document.getElementById('tr-body');
+  if(!apps.length){body.innerHTML=`<tr><td colspan="8"><div class="empty"><div class="ei">📋</div><div class="et">${trFilter==='all'?'No applications yet':'No '+trFilter+' applications'}</div>${trFilter==='all'?'<button class="btn btn-primary btn-sm" onclick="openM(\'app\')">＋ Add Application</button>':''}</div></td></tr>`;return;}
+  body.innerHTML=apps.map(a=>{
+    const d=diff(a.followupDate);
+    const fu=a.followupDate?(d<0?`<span style="color:var(--rose);font-weight:600;">${Math.abs(d)}d overdue</span>`:d===0?`<span style="color:var(--amber);font-weight:600;">Today</span>`:`<span style="color:var(--ink3);">In ${d}d</span>`):'<span style="color:var(--ink4);">—</span>';
+    const sc=a.atsScore?`<span style="font-size:12px;font-weight:700;color:${a.atsScore>=80?'var(--green)':a.atsScore>=60?'var(--amber)':'var(--rose)'};">${a.atsScore}%</span>`:'<span style="color:var(--ink4);">—</span>';
+    const ghost=a.ghostListing==='confirmed'?' 👻':a.ghostListing==='suspected'?' ❓':'';
+    return`<tr onclick="viewApp('${a.id}')">
+      <td><div style="display:flex;align-items:center;gap:8px;"><div style="width:27px;height:27px;border-radius:6px;background:${compColor(a.company)};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:11px;color:#fff;flex-shrink:0;">${(a.company||'?').charAt(0).toUpperCase()}</div><span style="font-weight:600;">${esc(a.company)}${ghost}</span></div></td>
+      <td style="color:var(--ink2);">${esc(a.role)}</td>
+      <td><span class="badge ${SB[a.status]||''}">${SL[a.status]||a.status}</span></td>
+      <td style="color:var(--ink3);font-size:12px;">${fmtD(a.dateApplied)}</td>
+      <td style="color:var(--green);font-size:12px;">${esc(a.salary||'—')}</td>
+      <td>${fu}</td><td>${sc}</td>
+      <td onclick="event.stopPropagation()"><div class="ra"><div class="ibt" onclick="editApp('${a.id}')">✏️</div><div class="ibt" onclick="confirmDel('${a.id}')">🗑</div></div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── KANBAN ─────────────────────────────────────────────────────────────────
+function renderKanban(){
+  const cols=['saved','applied','interview','offer','rejected'];
+  const cl={saved:'💾 Saved',applied:'📤 Applied',interview:'🎤 Interview',offer:'🎉 Offer',rejected:'❌ Rejected'};
+  const cc={saved:'var(--amber)',applied:'var(--blue)',interview:'var(--purple)',offer:'var(--green)',rejected:'var(--rose)'};
+  document.getElementById('kanban-board').innerHTML=cols.map(s=>{
+    const apps=DB.apps.filter(a=>a.status===s).sort((a,b)=>b.createdAt-a.createdAt);
+    return`<div class="kcol"><div class="kcol-head" style="border-top:3px solid ${cc[s]};"><span>${cl[s]}</span><span class="kcol-cnt">${apps.length}</span></div>
+    <div class="kcol-body">
+      ${apps.map(a=>`<div class="kcard" onclick="viewApp('${a.id}')"><div class="kc-co">${esc(a.company)}</div><div class="kc-role">${esc(a.role)}</div><div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:11px;color:var(--ink3);">${fmtD(a.dateApplied)}</span>${a.salary?`<span style="font-size:11px;font-weight:600;color:var(--green);">${esc(a.salary)}</span>`:''}</div>${a.followupDate&&diff(a.followupDate)<=2?'<div style="font-size:11px;color:var(--amber);margin-top:5px;font-weight:600;">⏰ Follow-up due</div>':''}</div>`).join('')}
+      <div onclick="openM('app')" style="border:1px dashed var(--border);border-radius:7px;padding:8px;text-align:center;font-size:12px;color:var(--ink3);cursor:pointer;" onmouseover="this.style.color='var(--blue)';this.style.borderColor='var(--blue)'" onmouseout="this.style.color='var(--ink3)';this.style.borderColor='var(--border)'">＋ Add</div>
+    </div></div>`;
+  }).join('');
+}
+
+// ── FOLLOW-UPS ─────────────────────────────────────────────────────────────
+function renderFollowups(){
+  const apps=DB.apps.filter(a=>a.followupDate&&!['offer','rejected'].includes(a.status)).sort((a,b)=>new Date(a.followupDate)-new Date(b.followupDate));
+  const el=document.getElementById('fu-body');
+  if(!apps.length){el.innerHTML='<div class="empty"><div class="ei">🔔</div><div class="et">No follow-ups set</div><div class="es">Add a follow-up date when logging an application</div></div>';return;}
+  el.innerHTML=apps.map(a=>{const d=diff(a.followupDate);const label=d<0?`${Math.abs(d)}d overdue`:d===0?'Due today':d===1?'Due tomorrow':`In ${d} days`;const col=d<0?'var(--rose)':d===0?'var(--amber)':d<=3?'var(--purple)':'var(--ink3)';return`<div onclick="viewApp('${a.id}')" style="display:flex;align-items:center;gap:12px;padding:12px 17px;border-bottom:1px solid var(--border);cursor:pointer;" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''"><div style="width:32px;height:32px;border-radius:7px;background:${compColor(a.company)};display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;">${(a.company||'?').charAt(0).toUpperCase()}</div><div style="flex:1;"><div style="font-weight:700;">${esc(a.company)}</div><div style="font-size:12px;color:var(--ink3);">${esc(a.role)}</div></div><span class="badge ${SB[a.status]||''}">${SL[a.status]||''}</span><div style="font-size:12px;font-weight:700;color:${col};white-space:nowrap;">${label}</div></div>`;}).join('');
+}
+
+// ── APP MODAL ──────────────────────────────────────────────────────────────
+function openM(id){
+  if(id==='app'){document.getElementById('eid').value='';document.getElementById('mapp-t').textContent='Add Application';['f-co','f-role','f-sal','f-loc','f-url','f-notes'].forEach(x=>document.getElementById(x).value='');document.getElementById('f-status').value='applied';document.getElementById('f-date').value=today();document.getElementById('f-fu').value='';document.getElementById('f-ghost').value='no';}
+  document.getElementById('modal-'+id).classList.add('open');
+}
+function closeM(id){document.getElementById('modal-'+id).classList.remove('open');}
+document.querySelectorAll('.moverlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
+
+function saveApp(){
+  const co=v('f-co'),role=v('f-role');
+  if(!co||!role){toast('Company and role are required','error');return;}
+  const id=document.getElementById('eid').value;
+  const ex=id?DB.apps.find(a=>a.id===id):null;
+  const app={id:id||uid(),company:co,role,status:document.getElementById('f-status').value,dateApplied:v('f-date'),salary:v('f-sal'),location:v('f-loc'),url:v('f-url'),followupDate:v('f-fu'),ghostListing:document.getElementById('f-ghost').value,notes:v('f-notes'),atsScore:ex?.atsScore||null,tailoredBullets:ex?.tailoredBullets||'',createdAt:ex?.createdAt||Date.now(),updatedAt:Date.now()};
+  if(id){const i=DB.apps.findIndex(a=>a.id===id);if(i>-1)DB.apps[i]=app;}else DB.apps.unshift(app);
+  save();closeM('app');toast(id?'Updated!':'Application added! ✓','success');renderV(curView);
+}
+
+function editApp(id){
+  const a=DB.apps.find(x=>x.id===id);if(!a)return;
+  document.getElementById('eid').value=a.id;document.getElementById('mapp-t').textContent='Edit Application';
+  document.getElementById('f-co').value=a.company||'';document.getElementById('f-role').value=a.role||'';
+  document.getElementById('f-status').value=a.status||'applied';document.getElementById('f-date').value=a.dateApplied||'';
+  document.getElementById('f-sal').value=a.salary||'';document.getElementById('f-loc').value=a.location||'';
+  document.getElementById('f-url').value=a.url||'';document.getElementById('f-fu').value=a.followupDate||'';
+  document.getElementById('f-ghost').value=a.ghostListing||'no';document.getElementById('f-notes').value=a.notes||'';
+  closeM('view');openM('app');
+}
+
+function viewApp(id){
+  const a=DB.apps.find(x=>x.id===id);if(!a)return;
+  document.getElementById('va-t').textContent=a.company;
+  document.getElementById('va-s').textContent=a.role+(a.location?' · '+a.location:'');
+  document.getElementById('va-edit').onclick=()=>editApp(id);
+  document.getElementById('va-del').onclick=()=>{closeM('view');confirmDel(id);};
+  const d=a.followupDate?diff(a.followupDate):null;
+  const fuT=d===null?'Not set':d<0?`${Math.abs(d)}d overdue`:d===0?'Today':d===1?'Tomorrow':`In ${d} days`;
+  const fuC=d!==null&&d<=0?'color:var(--rose)':'';
+  const ghost=a.ghostListing==='confirmed'?'<span style="background:var(--rose-dim);color:var(--rose);font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;">👻 Ghost Listing</span>':a.ghostListing==='suspected'?'<span style="background:var(--amber-dim);color:var(--amber);font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;">❓ Suspected Ghost</span>':'';
+  document.getElementById('va-body').innerHTML=`
+    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;"><span class="badge ${SB[a.status]||''}">${SL[a.status]||a.status}</span>${a.salary?`<span style="font-size:12px;font-weight:600;color:var(--green);">${esc(a.salary)}</span>`:''}${a.dateApplied?`<span style="font-size:12px;color:var(--ink3);">Applied ${fmtD(a.dateApplied)}</span>`:''}${ghost}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:13px;">
+      <div style="background:var(--bg);border-radius:7px;padding:10px;"><div style="font-size:11px;font-weight:600;color:var(--ink3);margin-bottom:3px;">FOLLOW-UP</div><div style="font-size:13px;font-weight:600;${fuC}">${fuT}</div></div>
+      <div style="background:var(--bg);border-radius:7px;padding:10px;"><div style="font-size:11px;font-weight:600;color:var(--ink3);margin-bottom:3px;">ATS SCORE</div><div style="font-size:13px;font-weight:700;color:${a.atsScore>=80?'var(--green)':a.atsScore>=60?'var(--amber)':'var(--rose)'};">${a.atsScore?a.atsScore+'%':'Not scored'}</div></div>
+    </div>
+    ${a.url?`<div style="margin-bottom:11px;"><a href="${esc(a.url)}" target="_blank" style="color:var(--blue);font-size:13px;text-decoration:none;font-weight:500;">🔗 View Job Posting →</a></div>`:''}
+    ${a.notes?`<div style="margin-bottom:11px;"><div style="font-size:11px;font-weight:600;color:var(--ink3);margin-bottom:4px;">NOTES</div><div style="font-size:13px;color:var(--ink2);line-height:1.6;background:var(--bg);padding:10px;border-radius:7px;">${esc(a.notes).replace(/\n/g,'<br>')}</div></div>`:''}
+    ${a.tailoredBullets?`<div><div style="font-size:11px;font-weight:600;color:var(--ink3);margin-bottom:4px;">AI-TAILORED BULLETS</div><div style="font-size:12.5px;color:var(--ink2);line-height:1.7;background:var(--bg);padding:10px;border-radius:7px;">${esc(a.tailoredBullets).replace(/\n/g,'<br>')}</div></div>`:''}
+    <div style="margin-top:13px;"><button class="btn btn-ghost btn-sm" onclick="quickStatus('${id}')">Advance Status →</button></div>`;
+  openM('view');
+}
+
+function quickStatus(id){const a=DB.apps.find(x=>x.id===id);if(!a)return;const order=['saved','applied','interview','offer','rejected','ghosted'];const i=order.indexOf(a.status);a.status=order[(i+1)%order.length];a.updatedAt=Date.now();save();closeM('view');toast(`Status → ${SL[a.status]}`,'success');renderV(curView);}
+
+function confirmDel(id){
+  const a=DB.apps.find(x=>x.id===id);
+  document.getElementById('cm-msg').textContent=`Delete "${a?.role||'this role'}" at ${a?.company}? This can't be undone.`;
+  document.getElementById('cm-ok').onclick=()=>{DB.apps=DB.apps.filter(x=>x.id!==id);save();closeM('confirm');toast('Deleted','error');renderV(curView);};
+  openM('confirm');
+}
+
+// ── AI CALL ────────────────────────────────────────────────────────────────
+async function callAI(prompt,maxTokens=800,system=''){
+  if(API_KEY==='YOUR_API_KEY_HERE'){toast('Add your API key to the app file first','error');throw new Error('No API key');}
+  const body={model:'claude-sonnet-4-6',max_tokens:maxTokens,messages:[{role:'user',content:prompt}]};
+  if(system)body.system=system;
+  const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-ipc':'true'},body:JSON.stringify(body)});
+  const data=await res.json();
+  if(data.error)throw new Error(data.error.message);
+  return data.content?.map(c=>c.text||'').join('').trim();
+}
+
+// ── TAILOR ─────────────────────────────────────────────────────────────────
+function loadRes(){const r=DB.resume;if(!r.bullets){toast('Save your resume in My Resume first','info');return;}document.getElementById('res-inp').value=r.bullets;toast('Resume loaded!','success');}
+
+async function runATS(){
+  const jd=v('jd-inp'),res=v('res-inp')||DB.resume?.bullets||'';
+  if(!jd){toast('Paste a job description first','error');return;}
+  if(!res){toast('Add your resume bullets first','error');return;}
+  const panel=document.getElementById('ats-panel');
+  panel.innerHTML=`<div style="padding:16px;"><div class="shim" style="height:84px;border-radius:7px;"></div></div>`;
+  try{
+    const prompt=`Analyze resume vs job description. Return ONLY valid JSON, no markdown:\n{"score":0,"grade":"A","summary":"one sentence","matchedKeywords":[],"missingKeywords":[],"topTip":"one tip"}\n\nJOB:\n${jd.slice(0,1500)}\n\nRESUME:\n${res.slice(0,1000)}`;
+    const text=await callAI(prompt,600);
+    const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
+    const sc=parsed.score||0;const col=sc>=80?'var(--green)':sc>=60?'var(--amber)':'var(--rose)';
+    const circ=2*Math.PI*35;const off=circ*(1-sc/100);
+    panel.innerHTML=`<div class="ring-wrap"><div class="ring"><svg width="84" height="84" viewBox="0 0 84 84"><circle cx="42" cy="42" r="35" fill="none" stroke="var(--bg)" stroke-width="10"/><circle cx="42" cy="42" r="35" fill="none" stroke="${col}" stroke-width="10" stroke-dasharray="${circ}" stroke-dashoffset="${off}" stroke-linecap="round" style="transition:stroke-dashoffset .8s;"/></svg><div class="ring-val" style="color:${col};">${sc}%</div></div><div><div style="font-size:13px;font-weight:700;margin-bottom:3px;">Grade: ${parsed.grade||''}</div><div style="font-size:12px;color:var(--ink2);margin-bottom:7px;">${esc(parsed.summary||'')}</div>${parsed.topTip?`<div style="font-size:12px;color:var(--blue);font-weight:500;">💡 ${esc(parsed.topTip)}</div>`:''}</div></div>
+    <div style="padding:0 15px 14px;">
+      ${parsed.matchedKeywords?.length?`<div style="font-size:11px;font-weight:600;color:var(--ink3);margin-bottom:5px;">MATCHED</div><div class="kw-chips">${parsed.matchedKeywords.slice(0,10).map(k=>`<span class="kwc kwc-hit">${esc(k)}</span>`).join('')}</div>`:''}
+      ${parsed.missingKeywords?.length?`<div style="font-size:11px;font-weight:600;color:var(--ink3);margin:9px 0 5px;">MISSING</div><div class="kw-chips">${parsed.missingKeywords.slice(0,10).map(k=>`<span class="kwc kwc-miss">${esc(k)}</span>`).join('')}</div>`:''}
+    </div>`;
+    const co=v('jd-co').toLowerCase();if(co){const m=DB.apps.find(a=>a.company.toLowerCase().includes(co));if(m){m.atsScore=sc;save();}}
+  }catch(e){if(e.message!=='No API key')panel.innerHTML=`<div style="padding:14px;font-size:13px;color:var(--rose);">Scoring failed. Check your connection and API key.</div>`;}
+}
+
+async function tailorResume(){
+  const jd=v('jd-inp'),res=v('res-inp')||DB.resume?.bullets||'';
+  const co=v('jd-co'),role=v('jd-role');
+  if(!jd){toast('Paste a job description first','error');return;}
+  if(!res){toast('Add resume bullets first','error');return;}
+  document.getElementById('tailor-empty').style.display='none';
+  const out=document.getElementById('tailor-out');out.style.display='block';
+  out.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px;">${[1,2,3,4].map(()=>`<div class="shim" style="height:46px;border-radius:7px;"></div>`).join('')}</div>`;
+  try{
+    const text=await callAI(`Rewrite these resume bullets to match the job. Rules: strong action verbs, use job keywords naturally, keep or improve metrics, one bullet per line starting with •. Output ONLY bullets.\n\nJOB: ${role} at ${co}\n\nJOB DESCRIPTION:\n${jd.slice(0,1500)}\n\nORIGINAL BULLETS:\n${res}`,800);
+    out.innerHTML=text.split('\n').filter(l=>l.trim()).map(l=>`<div class="rbullet"><div class="rbd"></div><div class="rbt" contenteditable="true">${esc(l.replace(/^[•\-\*]\s*/,''))}</div></div>`).join('');
+    document.getElementById('tailor-acts').style.display='flex';
+    toast('Bullets tailored! ✨','success');
+    if(!document.getElementById('ats-panel').querySelector('.ring-wrap'))runATS();
+  }catch(e){if(e.message!=='No API key')out.innerHTML=`<div style="color:var(--rose);font-size:13px;">Generation failed. Try again.</div>`;}
+}
+
+function copyBullets(){const b=[...document.querySelectorAll('.rbt')].map(el=>'• '+el.textContent.trim()).join('\n');navigator.clipboard.writeText(b).then(()=>toast('Copied!','success'));}
+function saveBulletsToApp(){const b=[...document.querySelectorAll('.rbt')].map(el=>'• '+el.textContent.trim()).join('\n');const co=v('jd-co').toLowerCase();const m=DB.apps.find(a=>a.company.toLowerCase().includes(co));if(m){m.tailoredBullets=b;m.updatedAt=Date.now();save();toast(`Saved to ${m.company}!`,'success');}else{navigator.clipboard.writeText(b);toast('Copied to clipboard!','info');}}
+
+// ── COVER LETTER ───────────────────────────────────────────────────────────
+async function genCL(){
+  const co=v('cl-co'),role=v('cl-role');
+  if(!co||!role){toast('Enter company and role','error');return;}
+  document.getElementById('cl-empty').style.display='none';document.getElementById('cl-out').style.display='block';
+  document.getElementById('cl-text').innerHTML=`<div class="shim" style="height:160px;border-radius:7px;"></div>`;
+  const tones={professional:'professional and confident',enthusiastic:'enthusiastic and energetic',concise:'concise and direct (under 250 words)',storytelling:'narrative with a compelling opening'};
+  try{
+    const text=await callAI(`Write a cover letter for ${role} at ${co}. Tone: ${tones[v('cl-tone')]||'professional'}.\n${v('cl-jd')?'Job description:\n'+v('cl-jd').slice(0,800):''}\n${v('cl-str')?'Candidate highlights:\n'+v('cl-str'):''}\n\nStart directly with the salutation. No meta-commentary. Be specific and compelling, not generic.`,700);
+    document.getElementById('cl-text').textContent=text;toast('Cover letter generated!','success');
+  }catch(e){if(e.message!=='No API key')document.getElementById('cl-text').textContent='Generation failed. Try again.';}
+}
+function copyCL(){navigator.clipboard.writeText(document.getElementById('cl-text').textContent).then(()=>toast('Copied!','success'));}
+
+// ── MOCK INTERVIEW ─────────────────────────────────────────────────────────
+async function startInterview(){
+  const co=v('mi-co');if(!co){toast('Enter a company/role first','error');return;}
+  const types={behavioral:'behavioral (STAR method)',technical:'technical screening',product:'product sense',case:'case study',culture:'culture fit',final:'final round executive'};
+  miSetup={co,type:document.getElementById('mi-type').value};miHistory=[];
+  const chat=document.getElementById('mi-chat');
+  chat.innerHTML=`<div class="shim" style="height:75px;border-radius:8px;"></div>`;
+  document.getElementById('mi-row').style.display='flex';
+  try{
+    const text=await callAI(`You are a rigorous interviewer at ${co} conducting a ${types[miSetup.type]} interview. ${v('mi-jd')?'Job:\n'+v('mi-jd').slice(0,600):''}${v('mi-bg')?'\nCandidate background:\n'+v('mi-bg'):''}\n\nStart with a brief warm welcome (1 sentence), then ask your FIRST interview question. Make it specific and realistic for ${co}. Be direct, not sycophantic.`,400);
+    miHistory.push({role:'assistant',content:text});
+    chat.innerHTML=`<div class="chat-msg chat-ai">${esc(text).replace(/\n/g,'<br>')}</div>`;
+    toast('Interview started! Type your answer below.','success');
+  }catch(e){if(e.message!=='No API key')chat.innerHTML=`<div style="color:var(--rose);font-size:13px;padding:14px;">Failed to start. Check your API key and connection.</div>`;}
+}
+
+async function sendAns(){
+  const inp=document.getElementById('mi-inp');
+  const answer=inp.value.trim();if(!answer||!miSetup)return;
+  inp.value='';
+  const chat=document.getElementById('mi-chat');
+  chat.innerHTML+=`<div class="chat-msg chat-user">${esc(answer).replace(/\n/g,'<br>')}</div>`;
+  miHistory.push({role:'user',content:answer});
+  const typing=document.createElement('div');typing.className='chat-msg chat-ai';typing.innerHTML='<em style="color:var(--ink3);">Thinking…</em>';
+  chat.appendChild(typing);chat.scrollTop=chat.scrollHeight;
+  try{
+    const text=await callAI(`Give honest 2-sentence feedback on this interview answer, then ask the next question. Be direct and specific. Don't be sycophantic.`,500,`You are a rigorous ${miSetup.type} interviewer at ${miSetup.co}.`);
+    miHistory.push({role:'assistant',content:text});
+    typing.innerHTML=esc(text).replace(/\n/g,'<br>');
+    chat.scrollTop=chat.scrollHeight;
+  }catch(e){typing.innerHTML='<span style="color:var(--rose);">Connection failed. Try again.</span>';}
+}
+
+// ── CAREER PATH ────────────────────────────────────────────────────────────
+async function exploreCareer(){
+  const cur=v('cp-cur');if(!cur){toast('Enter your current role','error');return;}
+  const el=document.getElementById('cp-result');
+  el.innerHTML=`<div class="shim" style="height:220px;border-radius:7px;"></div>`;
+  const prefs={fastest:'fastest path to senior',pivot:'career pivot',leadership:'leadership track',specialist:'deep specialization',startup:'startup/entrepreneurship'};
+  try{
+    const text=await callAI(`Career path for: ${cur}, ${v('cp-yrs')||'?'} years experience. Goal: ${v('cp-goal')||'not specified'}. Skills: ${v('cp-skills')||'not specified'}. Direction: ${prefs[document.getElementById('cp-pref').value]}.\n\nReturn ONLY valid JSON:\n{"paths":[{"step":1,"role":"Title","timeline":"e.g. 6–12 months","description":"what to do","skillsToAdd":["skill1"]}],"summary":"2 sentence advice","salaryTrajectory":"brief note"}\n\nGive 4-5 concrete steps.`,900);
+    const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
+    el.innerHTML=`${parsed.summary?`<div style="background:var(--blue-dim);border:1px solid rgba(37,99,235,.15);border-radius:7px;padding:11px;font-size:13px;color:var(--ink2);line-height:1.6;margin-bottom:14px;">${esc(parsed.summary)}</div>`:''}
+    ${(parsed.paths||[]).map((p,i)=>`<div class="cp-step"><div class="cp-num">${p.step||i+1}</div><div><div class="cp-role">${esc(p.role)}</div><div class="cp-time">⏱ ${esc(p.timeline)}</div><div class="cp-desc">${esc(p.description)}</div>${p.skillsToAdd?.length?`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;">${p.skillsToAdd.map(s=>`<span style="background:var(--blue-dim);color:var(--blue);font-size:11px;font-weight:600;padding:2px 7px;border-radius:20px;">+ ${esc(s)}</span>`).join('')}</div>`:''}</div></div>`).join('')}
+    ${parsed.salaryTrajectory?`<div style="margin-top:9px;padding:10px;background:var(--green-dim);border-radius:7px;font-size:13px;color:var(--green);font-weight:500;">💰 ${esc(parsed.salaryTrajectory)}</div>`:''}`;
+    toast('Career path generated!','success');
+  }catch(e){if(e.message!=='No API key')el.innerHTML=`<div style="color:var(--rose);font-size:13px;padding:14px;">Generation failed. Try again.</div>`;}
+}
+
+// ── JOB SEARCH ─────────────────────────────────────────────────────────────
+async function searchJobs(){
+  const q=v('js-q');if(!q){toast('Describe your ideal job first','error');return;}
+  const el=document.getElementById('js-result');
+  el.innerHTML=`<div class="shim" style="height:180px;border-radius:7px;"></div>`;
+  try{
+    const text=await callAI(`Job seeker describes ideal role: "${q}"\n${v('js-bg')?'Background: '+v('js-bg'):''}\n\nGive:\n1. 5 specific job titles to search (with why)\n2. 8 companies that would be a great fit (name + brief reason)\n3. Exact search filters to use\n4. 3 best job boards for this type of role\n5. One honest piece of advice\n\nBe specific, not generic.`,800);
+    el.innerHTML=`<div class="ai-box" style="max-height:none;">${esc(text).replace(/\n/g,'<br>')}</div>`;
+    toast('Job search strategy ready!','success');
+  }catch(e){if(e.message!=='No API key')el.innerHTML=`<div style="color:var(--rose);font-size:13px;">Failed. Check connection.</div>`;}
+}
+
+// ── AUTO-FILL ──────────────────────────────────────────────────────────────
+function saveAF(){
+  DB.autofill={name:v('af-name'),email:v('af-email'),phone:v('af-phone'),location:v('af-loc'),linkedin:v('af-li'),website:v('af-web'),title:v('af-title'),yoe:v('af-yoe'),salary:v('af-sal'),auth:document.getElementById('af-auth').value,summary:v('af-sum')};
+  save();renderAF();toast('Auto-fill profile saved!','success');
+}
+
+function renderAF(){
+  const af=DB.autofill||{};
+  ['name','email','phone','li','web','title','yoe','sal','sum'].forEach(k=>{const el=document.getElementById('af-'+k);if(el)el.value=af[k]||'';});
+  document.getElementById('af-loc').value=af.location||'';
+  if(af.auth)document.getElementById('af-auth').value=af.auth;
+  const fields=[['Full Name',af.name],['Email',af.email],['Phone',af.phone],['Location',af.location],['LinkedIn',af.linkedin],['Website',af.website],['Current Title',af.title],['Years Experience',af.yoe],['Salary Expectation',af.salary],['Work Authorization',af.auth],['Summary',af.summary]].filter(([,val])=>val);
+  const el=document.getElementById('af-qc');
+  if(!fields.length){el.innerHTML='<div style="font-size:13px;color:var(--ink3);">Save your profile above to see quick-copy fields.</div>';return;}
+  el.innerHTML=fields.map(([label,val])=>`<div class="af-field"><div class="af-lbl">${esc(label)}</div><div class="af-val">${esc(val)}</div><div class="af-copy" onclick="copyF('${esc(val).replace(/'/g,"\\'")}','${esc(label)}')">Copy</div></div>`).join('');
+}
+function copyF(val,label){navigator.clipboard.writeText(val).then(()=>toast(`${label} copied!`,'success'));}
+
+// ── RESUME ─────────────────────────────────────────────────────────────────
+function renderResumePage(){const r=DB.resume||{};document.getElementById('r-sum').value=r.summary||'';document.getElementById('r-skills').value=r.skills||'';document.getElementById('r-bullets').value=r.bullets||'';document.getElementById('r-edu').value=r.education||'';}
+function saveResume(){DB.resume={summary:v('r-sum'),skills:v('r-skills'),bullets:v('r-bullets'),education:v('r-edu'),updatedAt:Date.now()};save();toast('Resume saved!','success');}
+
+// ── SETTINGS ───────────────────────────────────────────────────────────────
+function renderSettings(){const s=DB.settings||{};document.getElementById('s-name').value=s.name||'';document.getElementById('s-role').value=s.role||'';document.getElementById('s-ind').value=s.industries||'';document.getElementById('s-sal').value=s.salary||'';}
+function saveSettings(){DB.settings={name:v('s-name'),role:v('s-role'),industries:v('s-ind'),salary:v('s-sal')};save();updateNav();toast('Profile saved!','success');}
+
+// ── EXPORT ─────────────────────────────────────────────────────────────────
+function exportCSV(){
+  const rows=[['Company','Role','Status','Date Applied','Salary','Location','Follow-up','ATS Score','Ghost?','Notes']];
+  DB.apps.forEach(a=>rows.push([a.company,a.role,a.status,a.dateApplied||'',a.salary||'',a.location||'',a.followupDate||'',a.atsScore||'',a.ghostListing||'',a.notes||'']));
+  dl(new Blob([rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n')],{type:'text/csv'}),'hiretrack-apps.csv');
+  toast('Exported!','success');
+}
+function exportAll(){dl(new Blob([JSON.stringify(DB,null,2)],{type:'application/json'}),'hiretrack-backup.json');toast('Backup exported!','success');}
+function dl(blob,name){const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(blob),download:name});a.click();URL.revokeObjectURL(a.href);}
+function clearAll(){if(confirm('Delete ALL data? Cannot be undone.')){DB={apps:[],settings:{},resume:{},autofill:{},onboarded:false};save();renderV(curView);toast('Cleared','error');}}
+
+// ── SEARCH ─────────────────────────────────────────────────────────────────
+function handleSearch(q){if(curView==='tracker')renderTracker(q);}
+
+// ── TOAST ──────────────────────────────────────────────────────────────────
+function toast(msg,type='success'){const icons={success:'✅',error:'❌',info:'ℹ️'};const el=document.createElement('div');el.className=`toast ${type}`;el.innerHTML=`<span>${icons[type]}</span>${msg}`;document.getElementById('toasts').appendChild(el);setTimeout(()=>{el.style.transition='opacity .3s';el.style.opacity='0';setTimeout(()=>el.remove(),300);},3500);}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+load();
+if(DB.onboarded){document.getElementById('onboard-overlay').style.display='none';}
+renderDash();
+</script>
+</body>
+</html>
